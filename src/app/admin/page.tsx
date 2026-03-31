@@ -37,16 +37,8 @@ export default async function AdminPage() {
     await updateUserRole(userId, role)
   }
 
-  async function handleDeletePost(postId: string) {
-    "use server"
-    await deletePost(postId)
-  }
-
-  async function handleDeleteResource(resourceId: string) {
-    "use server"
-    await deleteResource(resourceId)
-  }
-
+  
+  
   return (
     <div className="container mx-auto max-w-6xl py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
@@ -147,11 +139,10 @@ export default async function AdminPage() {
                           {post._count.comments} comments • {post._count.votes} votes • {new Date(post.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <form action={handleDeletePost.bind(null, post.id)}>
-                        <Button variant="destructive" size="sm">
-                          Delete
-                        </Button>
-                      </form>
+                      <form action={async (formData) => { "use server"; await deletePost(formData.get("id") as string); }}>
+    <input type="hidden" name="id" value={post.id} />
+    <Button type="submit" variant="destructive" size="sm">Delete</Button>
+  </form>
                     </div>
                   ))}
                 </div>
@@ -181,11 +172,10 @@ export default async function AdminPage() {
                           {resource.downloads} downloads • {new Date(resource.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <form action={handleDeleteResource.bind(null, resource.id)}>
-                        <Button variant="destructive" size="sm">
-                          Delete
-                        </Button>
-                      </form>
+                      <form action={async (formData) => { "use server"; await deleteResource(formData.get("id") as string); }}>
+    <input type="hidden" name="id" value={resource.id} />
+    <Button type="submit" variant="destructive" size="sm">Delete</Button>
+  </form>
                     </div>
                   ))}
                 </div>

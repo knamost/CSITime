@@ -100,3 +100,70 @@ export async function toggleVote(postId: string, value: 1 | -1) {
   revalidatePath(`/post/${postId}`)
   return { success: true }
 }
+
+export async function deleteOwnPost(postId: string) {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: "Unauthorized" }
+  }
+
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { authorId: true }
+  })
+
+  if (!post) {
+    return { error: "Not found" }
+  }
+
+  if (post.authorId !== session.user.id && session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
+    return { error: "Unauthorized" }
+  }
+
+  await prisma.post.delete({
+    where: { id: postId }
+  })
+
+  revalidatePath("/posts")
+  return { success: true }
+}
+
+export async function deleteOwnResource(resourceId: string) {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: "Unauthorized" }
+  }
+
+  const resource = await prisma.resource.findUnique({
+    where: { id: resourceId }
+  })
+
+  if (!resource) {
+    return { error: "Not found" }
+  }
+
+  if (resource.uploadedById !== session.user.id && session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
+    return { error: "Unauthorized" }
+  }
+
+  // Delete from uploadthing if applicable
+  if (resource.filePath && resource.filePath.includes('uploadthing.com')) {
+    const fileKey = resource.filePath.split('/').pop()
+    if (fileKey) {
+      try {
+        const { UTApi } = await import("uploadthing/server")
+        const utapi = new UTApi()
+        await utapi.deleteFiles(fileKey)
+      } catch (e) {
+        console.error("Failed to delete from uploadthing:", e)
+      }
+    }
+  }
+
+  await prisma.resource.delete({
+    where: { id: resourceId }
+  })
+
+  revalidatePath("/profile")
+  return { success: true }
+}

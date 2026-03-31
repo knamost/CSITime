@@ -2,12 +2,14 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { auth } from "@/auth"
-import { ArrowLeft, Clock, MessageSquare, ArrowUp, ArrowDown, AlertCircle, Bookmark } from "lucide-react"
+import { ArrowLeft, Clock, MessageSquare, ArrowUp, ArrowDown, AlertCircle, Bookmark, Trash2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { Badge } from "@/components/ui/badge"
 import { toggleVote } from "@/app/actions/discussion"
+import { deleteOwnPost } from "@/app/actions/discussion"
+import { redirect } from "next/navigation"
 import { toggleBookmark } from "@/app/actions/bookmark"
 import { CommentSection } from "./comment-section"
 import ReactMarkdown from "react-markdown"
@@ -54,6 +56,15 @@ export default async function PostDetailPage({
     const isBookmarked = session?.user
       ? post.bookmarks.some((b) => b.userId === session.user.id)
       : false
+      
+    const isAuthorOrAdmin = session?.user && (session.user.id === post.authorId || session.user.role === "ADMIN" || session.user.role === "MODERATOR")
+    
+    async function handleDeleteOwnPost() {
+      "use server"
+      if (!isAuthorOrAdmin) return
+      await deleteOwnPost(post!.id)
+      redirect('/posts')
+    }
 
     return (
       <div className="max-w-4xl mx-auto space-y-8 py-6 animate-in fade-in duration-500 px-4">
@@ -110,6 +121,23 @@ export default async function PostDetailPage({
                         <span className="sr-only">Bookmark</span>
                       </Button>
                     </form>
+                    {isAuthorOrAdmin && (
+                      <>
+                        <span>•</span>
+                        <form action={handleDeleteOwnPost}>
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 ml-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete Post"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </form>
+                      </>
+                    )}
                   </>
                 )}
               </div>

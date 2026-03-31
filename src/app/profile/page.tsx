@@ -2,6 +2,8 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { updateProfile, getUserActivity } from "@/app/actions/profile"
+import { deleteOwnPost, deleteOwnResource } from "@/app/actions/discussion"
+import { Trash2 } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -190,7 +192,7 @@ export default async function ProfilePage() {
 
           <form action={updateSemester} className="space-y-2">
             <Label htmlFor="semester">Current Semester</Label>
-            <Select name="semester" defaultValue={user.currentSemester?.toString() || "none"}>
+            <Select key={user.currentSemester?.toString() || "none"} name="semester" defaultValue={user.currentSemester?.toString() || "none"}>
               <SelectTrigger className="w-full md:w-64">
                 <SelectValue placeholder="Select semester" />
               </SelectTrigger>
@@ -211,7 +213,7 @@ export default async function ProfilePage() {
           {showElective && (
             <form action={updateElective} className="space-y-2">
               <Label htmlFor="elective">Current Elective (Semester {user.currentSemester})</Label>
-              <Select name="elective" defaultValue={user.currentElective || "none"}>
+              <Select key={user.currentElective || "none"} name="elective" defaultValue={user.currentElective || "none"}>
                 <SelectTrigger className="w-full md:w-80">
                   <SelectValue placeholder="Select elective" />
                 </SelectTrigger>
@@ -246,13 +248,20 @@ export default async function ProfilePage() {
             <div className="space-y-3">
               {user.posts.map((post) => (
                 <Card key={post.id}>
-                  <CardContent className="p-4">
-                    <Link href={`/post/${post.id}`} className="font-medium hover:underline">
-                      {post.title}
-                    </Link>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      in {post.subject.name} • {new Date(post.createdAt).toLocaleDateString()}
-                    </p>
+                  <CardContent className="p-4 flex justify-between items-start">
+                    <div>
+                      <Link href={`/post/${post.id}`} className="font-medium hover:underline">
+                        {post.title}
+                      </Link>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        in {post.subject.name} • {new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <form action={async () => { "use server"; await deleteOwnPost(post.id); }}>
+                      <Button variant="ghost" size="icon" type="submit" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </form>
                   </CardContent>
                 </Card>
               ))}
@@ -275,7 +284,14 @@ export default async function ProfilePage() {
                           {resource.subject.name} • {resource.type} • {new Date(resource.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <span className="text-sm bg-muted px-2 py-1 rounded">{resource.downloads} downloads</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm bg-muted px-2 py-1 rounded">{resource.downloads} downloads</span>
+                        <form action={async () => { "use server"; await deleteOwnResource(resource.id); }}>
+                          <Button variant="ghost" size="icon" type="submit" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </form>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
