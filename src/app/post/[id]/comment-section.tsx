@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { Session } from "next-auth"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 function SubmitButton({ label = "Reply" }: { label?: string }) {
   const { pending } = useFormStatus()
@@ -36,7 +38,7 @@ function CommentForm({ postId, parentId, onSuccess }: { postId: string; parentId
     <form id={`form-${parentId || "root"}`} action={action} className="space-y-4">
       <input type="hidden" name="postId" value={postId} />
       {parentId && <input type="hidden" name="parentId" value={parentId} />}
-      <Textarea name="content" placeholder="Write a comment..." required minLength={2} className="min-h-[100px]" />
+      <Textarea name="content" placeholder="Write a comment... (Markdown supported)" required minLength={2} className="min-h-[100px]" />
       <div className="flex justify-end gap-2">
         {onSuccess && (
           <Button type="button" variant="ghost" onClick={onSuccess}>
@@ -91,7 +93,9 @@ export function CommentSection({
                     {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                   </span>
                 </div>
-                <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                <div className="text-sm prose prose-neutral dark:prose-invert max-w-none break-words">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
+                </div>
                 {session && (
                   <Button
                     variant="link"
@@ -123,7 +127,9 @@ export function CommentSection({
                           {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                         </span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
+                      <div className="text-sm prose prose-neutral dark:prose-invert max-w-none break-words">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{reply.content}</ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 ))}

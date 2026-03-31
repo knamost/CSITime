@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { DiscussionList } from "@/components/discussion-list"
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Plus } from "lucide-react"
+import Link from "next/link"
+import { buttonVariants } from "@/components/ui/button"
 
 export const revalidate = 0 // Discussions should be fresh
 
@@ -26,8 +28,8 @@ export default async function PostsPage() {
     })
 
     return (
-      <div className="space-y-8 animate-in fade-in duration-700 max-w-5xl mx-auto py-8">
-        <div className="flex flex-col space-y-4">
+      <div className="space-y-8 animate-in fade-in duration-700 max-w-5xl mx-auto py-8 px-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-primary/10 rounded-2xl">
               <MessageSquare className="h-8 w-8 text-primary" />
@@ -39,6 +41,9 @@ export default async function PostsPage() {
               </p>
             </div>
           </div>
+          <Link href="/post/new" className={buttonVariants()}>
+            <Plus className="h-4 w-4 mr-2" /> Start Discussion
+          </Link>
         </div>
 
         <div className="bg-card rounded-xl border p-6">

@@ -9,6 +9,8 @@ import { buttonVariants } from "@/components/ui/button-variants"
 import { Badge } from "@/components/ui/badge"
 import { toggleVote } from "@/app/actions/discussion"
 import { CommentSection } from "./comment-section"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 export default async function PostDetailPage({
   params,
@@ -49,7 +51,7 @@ export default async function PostDetailPage({
       : 0
 
     return (
-      <div className="max-w-4xl mx-auto space-y-8 py-6 animate-in fade-in duration-500">
+      <div className="max-w-4xl mx-auto space-y-8 py-6 animate-in fade-in duration-500 px-4">
         <Link href={`/subject/${post.subject.id}`} className={buttonVariants({ variant: "ghost", className: "mb-2" })}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to {post.subject.name}
         </Link>
@@ -81,7 +83,7 @@ export default async function PostDetailPage({
 
           <div className="flex-1 space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <Badge variant="secondary">{post.subject.code}</Badge>
                 <span>Posted by {post.author.name}</span>
                 <span>•</span>
@@ -91,8 +93,10 @@ export default async function PostDetailPage({
                 </span>
               </div>
               <h1 className="text-3xl font-bold">{post.title}</h1>
-              <div className="prose prose-neutral dark:prose-invert max-w-none whitespace-pre-wrap">
-                {post.content}
+              <div className="prose prose-neutral dark:prose-invert max-w-none break-words">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {post.content}
+                </ReactMarkdown>
               </div>
             </div>
 
