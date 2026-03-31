@@ -24,6 +24,7 @@ model User {
   resources       Resource[]
   sessions        Session[]
   votes           Vote[]
+  bookmarks       Bookmark[]
 }
 
 model Semester {
@@ -71,6 +72,7 @@ model Post {
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   votes     Vote[]
+  bookmarks Bookmark[]
 }
 
 model Comment {
@@ -135,4 +137,16 @@ enum ResourceType {
   NOTES
   MODEL_QUESTION
   SOLUTION
+}
+
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
 }

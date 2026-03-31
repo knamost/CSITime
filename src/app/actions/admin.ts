@@ -121,14 +121,30 @@ export async function deleteResource(resourceId: string) {
   try {
     const resource = await prisma.resource.findUnique({ where: { id: resourceId } })
     if (resource) {
-      const fs = await import("fs")
-      const path = await import("path")
-      const filePath = path.join(process.cwd(), "public", resource.filePath)
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath)
+      // If it's an uploadthing URL, we can extract the file key and delete it
+      if (resource.filePath && resource.filePath.includes('uploadthing.com')) {
+        const fileKey = resource.filePath.split('/').pop()
+        if (fileKey) {
+          try {
+            const { UTApi } = await import("uploadthing/server")
+            const utapi = new UTApi()
+            await utapi.deleteFiles(fileKey)
+          } catch (e) {
+            console.error("Failed to delete from uploadthing:", e)
+          }
+        }
+      } else {
+        // Fallback for local files
+        const fs = await import("fs")
+        const path = await import("path")
+        const filePath = path.join(process.cwd(), "public", resource.filePath)
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
       }
+      
+      await prisma.resource.delete({ where: { id: resourceId } })
     }
-    await prisma.resource.delete({ where: { id: resourceId } })
     revalidatePath("/admin")
     return { success: true }
   } catch (error) {

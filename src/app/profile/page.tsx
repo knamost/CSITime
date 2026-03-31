@@ -76,6 +76,15 @@ export default async function ProfilePage() {
         orderBy: { createdAt: "desc" },
         take: 10,
       },
+      bookmarks: {
+        include: { 
+          post: {
+            include: { subject: true }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }
     },
   })
 
@@ -224,9 +233,10 @@ export default async function ProfilePage() {
       </Card>
 
       <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="posts">My Posts ({user.posts.length})</TabsTrigger>
           <TabsTrigger value="resources">My Resources ({user.resources.length})</TabsTrigger>
+          <TabsTrigger value="bookmarks">Saved ({user.bookmarks.length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="posts" className="mt-4">
@@ -267,6 +277,27 @@ export default async function ProfilePage() {
                       </div>
                       <span className="text-sm bg-muted px-2 py-1 rounded">{resource.downloads} downloads</span>
                     </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="bookmarks" className="mt-4">
+          {user.bookmarks.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">No saved posts yet</p>
+          ) : (
+            <div className="space-y-3">
+              {user.bookmarks.map((bookmark) => (
+                <Card key={bookmark.id}>
+                  <CardContent className="p-4">
+                    <Link href={`/post/${bookmark.post.id}`} className="font-medium hover:underline">
+                      {bookmark.post.title}
+                    </Link>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      in {bookmark.post.subject.name} • Saved on {new Date(bookmark.createdAt).toLocaleDateString()}
+                    </p>
                   </CardContent>
                 </Card>
               ))}

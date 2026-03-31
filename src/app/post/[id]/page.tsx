@@ -2,12 +2,13 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { auth } from "@/auth"
-import { ArrowLeft, Clock, MessageSquare, ArrowUp, ArrowDown, AlertCircle } from "lucide-react"
+import { ArrowLeft, Clock, MessageSquare, ArrowUp, ArrowDown, AlertCircle, Bookmark } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { Badge } from "@/components/ui/badge"
 import { toggleVote } from "@/app/actions/discussion"
+import { toggleBookmark } from "@/app/actions/bookmark"
 import { CommentSection } from "./comment-section"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -27,6 +28,7 @@ export default async function PostDetailPage({
           author: { select: { name: true } },
           subject: { select: { id: true, name: true, code: true } },
           votes: true,
+          bookmarks: true,
           comments: {
             include: {
               author: { select: { name: true } },
@@ -49,6 +51,9 @@ export default async function PostDetailPage({
     const userVote = session?.user
       ? post.votes.find((v) => v.userId === session.user.id)?.value
       : 0
+    const isBookmarked = session?.user
+      ? post.bookmarks.some((b) => b.userId === session.user.id)
+      : false
 
     return (
       <div className="max-w-4xl mx-auto space-y-8 py-6 animate-in fade-in duration-500 px-4">
@@ -91,6 +96,22 @@ export default async function PostDetailPage({
                   <Clock className="h-3 w-3" />
                   {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                 </span>
+                {session?.user && (
+                  <>
+                    <span>•</span>
+                    <form action={async () => { "use server"; await toggleBookmark(post.id) }}>
+                      <Button
+                        type="submit"
+                        variant="ghost"
+                        size="icon"
+                        className={`h-6 w-6 ml-1 ${isBookmarked ? "text-blue-500" : ""}`}
+                      >
+                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+                        <span className="sr-only">Bookmark</span>
+                      </Button>
+                    </form>
+                  </>
+                )}
               </div>
               <h1 className="text-3xl font-bold">{post.title}</h1>
               <div className="prose prose-neutral dark:prose-invert max-w-none break-words">
