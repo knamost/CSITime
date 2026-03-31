@@ -8,6 +8,8 @@ export async function updateProfile(data: {
   currentSemester?: number | null
   currentElective?: string | null
   username?: string | null
+  name?: string | null
+  image?: string | null
 }) {
   const session = await auth()
   if (!session?.user?.id) {
@@ -15,17 +17,21 @@ export async function updateProfile(data: {
   }
 
   try {
+    const updateData: any = {}
+    if (data.currentSemester !== undefined) updateData.currentSemester = data.currentSemester
+    if (data.currentElective !== undefined) updateData.currentElective = data.currentElective
+    if (data.username !== undefined) updateData.username = data.username
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.image !== undefined) updateData.image = data.image
+
     await prisma.user.update({
       where: { id: session.user.id },
-      data: {
-        currentSemester: data.currentSemester ?? null,
-        currentElective: data.currentElective ?? null,
-        username: data.username ?? null,
-      },
+      data: updateData,
     })
     revalidatePath("/profile")
     return { success: true }
   } catch (error) {
+    console.error("Profile update error:", error)
     return { error: "Failed to update profile" }
   }
 }

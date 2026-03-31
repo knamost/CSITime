@@ -1,4 +1,6 @@
-import { auth } from "@/auth"
+const fs = require('fs');
+
+const content = `import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { deleteOwnPost, deleteOwnResource } from "@/app/actions/discussion"
@@ -110,7 +112,7 @@ export default async function ProfilePage() {
                   <Card key={post.id}>
                     <CardContent className="p-4 flex justify-between items-start">
                       <div>
-                        <Link href={`/post/${post.id}`} className="font-medium hover:underline">
+                        <Link href={\`/post/\${post.id}\`} className="font-medium hover:underline">
                           {post.title}
                         </Link>
                         <p className="text-sm text-muted-foreground mt-1">
@@ -176,7 +178,7 @@ export default async function ProfilePage() {
                 {user.bookmarks.map((bookmark) => (
                   <Card key={bookmark.id}>
                     <CardContent className="p-4">
-                      <Link href={`/post/${bookmark.post.id}`} className="font-medium hover:underline">
+                      <Link href={\`/post/\${bookmark.post.id}\`} className="font-medium hover:underline">
                         {bookmark.post.title}
                       </Link>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -193,3 +195,6 @@ export default async function ProfilePage() {
     </div>
   )
 }
+`
+fs.writeFileSync('src/app/profile/page.tsx', content);
+console.log("Profile page updated to use ProfileForm");

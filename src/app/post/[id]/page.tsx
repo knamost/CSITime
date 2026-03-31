@@ -12,6 +12,8 @@ import { deleteOwnPost } from "@/app/actions/discussion"
 import { redirect } from "next/navigation"
 import { toggleBookmark } from "@/app/actions/bookmark"
 import { CommentSection } from "./comment-section"
+import { PostActions } from "./post-actions"
+import { PostHistoryModal } from "./post-history-modal"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
@@ -57,14 +59,10 @@ export default async function PostDetailPage({
       ? post.bookmarks.some((b) => b.userId === session.user.id)
       : false
       
-    const isAuthorOrAdmin = session?.user && (session.user.id === post.authorId || session.user.role === "ADMIN" || session.user.role === "MODERATOR")
+    const isAuthor = session?.user?.id === post.authorId
+    const isAdminOrMod = session?.user?.role === "ADMIN" || session?.user?.role === "MODERATOR"
     
-    async function handleDeleteOwnPost() {
-      "use server"
-      if (!isAuthorOrAdmin) return
-      await deleteOwnPost(post!.id)
-      redirect('/posts')
-    }
+    
 
     return (
       <div className="max-w-4xl mx-auto space-y-8 py-6 animate-in fade-in duration-500 px-4">
@@ -107,6 +105,7 @@ export default async function PostDetailPage({
                   <Clock className="h-3 w-3" />
                   {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                 </span>
+                {post.isEdited && <PostHistoryModal postId={post.id} />}
                 {session?.user && (
                   <>
                     <span>•</span>
@@ -121,23 +120,7 @@ export default async function PostDetailPage({
                         <span className="sr-only">Bookmark</span>
                       </Button>
                     </form>
-                    {isAuthorOrAdmin && (
-                      <>
-                        <span>•</span>
-                        <form action={handleDeleteOwnPost}>
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 ml-1 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete Post"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </form>
-                      </>
-                    )}
+                    <PostActions post={post} isAuthor={isAuthor} isAdminOrMod={isAdminOrMod} />
                   </>
                 )}
               </div>

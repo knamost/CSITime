@@ -151,3 +151,41 @@ export async function deleteResource(resourceId: string) {
     return { error: "Failed to delete resource" }
   }
 }
+
+export async function getAllSubjects() {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return { error: "Unauthorized" }
+  try {
+    const subjects = await prisma.subject.findMany({
+      include: { semester: true, _count: { select: { posts: true, resources: true } } },
+      orderBy: { semesterId: 'asc' }
+    })
+    return { subjects }
+  } catch (error) {
+    return { error: "Failed to fetch subjects" }
+  }
+}
+
+export async function createSubject(name: string, code: string, semesterId: number) {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return { error: "Unauthorized" }
+  try {
+    await prisma.subject.create({ data: { name, code, semesterId } })
+    revalidatePath("/admin")
+    return { success: true }
+  } catch (error) {
+    return { error: "Failed to create subject" }
+  }
+}
+
+export async function updateSubject(id: string, name: string, code: string, semesterId: number) {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") return { error: "Unauthorized" }
+  try {
+    await prisma.subject.update({ where: { id }, data: { name, code, semesterId } })
+    revalidatePath("/admin")
+    return { success: true }
+  } catch (error) {
+    return { error: "Failed to update subject" }
+  }
+}

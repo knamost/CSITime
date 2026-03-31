@@ -29,16 +29,22 @@ export async function createResource(formData: FormData) {
 
   try {
     const resource = await prisma.resource.create({
-      data: {
-        title: parsed.data.title,
-        type: parsed.data.type,
-        fileName: parsed.data.fileName,
-        filePath: parsed.data.fileUrl, // Now storing the UploadThing URL
-        subjectId: parsed.data.subjectId,
-        uploadedById: session.user.id,
-        year: parsed.data.year ? parseInt(parsed.data.year) : null,
-      },
-    })
+    data: {
+      title: parsed.data.title,
+      type: parsed.data.type,
+      subjectId: parsed.data.subjectId,
+      year: parsed.data.year ? parseInt(parsed.data.year) : null,
+      uploadedById: session.user.id,
+      fileName: parsed.data.fileName,
+      filePath: parsed.data.fileUrl,
+    },
+  })
+
+  // Award Karma
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { karma: { increment: 10 } }
+  })
 
     revalidatePath(`/subject/${parsed.data.subjectId}`)
     return { success: true, resource }

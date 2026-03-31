@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import { getAllUsers, getAllPosts, getAllResources, updateUserRole, deletePost, deleteResource } from "@/app/actions/admin"
+import { getAllUsers, getAllPosts, getAllResources, updateUserRole, deletePost, deleteResource, getAllSubjects } from "@/app/actions/admin"
+import { SubjectManager } from "./subject-manager"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,15 +22,17 @@ export default async function AdminPage() {
     redirect("/")
   }
 
-  const [usersResult, postsResult, resourcesResult] = await Promise.all([
+  const [usersResult, postsResult, resourcesResult, subjectsResult] = await Promise.all([
     getAllUsers(),
     getAllPosts(),
     getAllResources(),
+    getAllSubjects(),
   ])
 
   const users = "users" in usersResult ? usersResult.users! : []
   const posts = "posts" in postsResult ? postsResult.posts! : []
   const resources = "resources" in resourcesResult ? resourcesResult.resources! : []
+  const subjects = "subjects" in subjectsResult ? subjectsResult.subjects! : []
 
   async function handleRoleUpdate(userId: string, formData: FormData) {
     "use server"
@@ -44,10 +47,11 @@ export default async function AdminPage() {
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
           <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>
           <TabsTrigger value="resources">Resources ({resources.length})</TabsTrigger>
+          <TabsTrigger value="subjects">Subjects</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-4">
@@ -72,7 +76,11 @@ export default async function AdminPage() {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link href={`/admin/user/${user.id}`} className="hover:underline text-primary">
+                          {user.name || "Unknown"}
+                        </Link>
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded text-xs ${
@@ -182,6 +190,10 @@ export default async function AdminPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="subjects" className="mt-4">
+          <SubjectManager subjects={subjects as any} />
         </TabsContent>
       </Tabs>
     </div>

@@ -44,6 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           currentSemester: user.currentSemester,
           currentElective: user.currentElective,
+          image: user.image,
         }
       },
     }),
@@ -56,6 +57,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.currentSemester = (user as any).currentSemester
         token.currentElective = (user as any).currentElective
         token.username = (user as any).username
+        token.image = (user as any).image
       }
       return token
     },
@@ -65,6 +67,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.currentSemester = token.currentSemester as number | null
       session.user.currentElective = token.currentElective as string | null
       session.user.username = token.username as string | null
+      session.user.image = token.image as string | null
       return session
     },
   },

@@ -34,6 +34,12 @@ export async function createPost(formData: FormData) {
     },
   })
 
+  // Award Karma
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { karma: { increment: 5 } }
+  })
+
   revalidatePath(`/subject/${parsed.data.subjectId}`)
   redirect(`/post/${post.id}`)
 }
@@ -66,6 +72,12 @@ export async function createComment(formData: FormData) {
     },
   })
 
+  // Award Karma
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { karma: { increment: 2 } }
+  })
+
   revalidatePath(`/post/${parsed.data.postId}`)
   return { success: true }
 }
@@ -85,16 +97,31 @@ export async function toggleVote(postId: string, value: 1 | -1) {
       await prisma.vote.delete({
         where: { userId_postId: { userId: session.user.id, postId } },
       })
+      // Remove vote karma from post author
+      const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } })
+      if (post) {
+        await prisma.user.update({ where: { id: post.authorId }, data: { karma: { decrement: value } } })
+      }
     } else {
       await prisma.vote.update({
         where: { userId_postId: { userId: session.user.id, postId } },
         data: { value },
       })
+      // Adjust vote karma for post author (e.g. going from -1 to +1 is a +2 change)
+      const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } })
+      if (post) {
+        await prisma.user.update({ where: { id: post.authorId }, data: { karma: { increment: value * 2 } } })
+      }
     }
   } else {
     await prisma.vote.create({
       data: { userId: session.user.id, postId, value },
     })
+    // Add vote karma to post author
+    const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } })
+    if (post) {
+      await prisma.user.update({ where: { id: post.authorId }, data: { karma: { increment: value } } })
+    }
   }
 
   revalidatePath(`/post/${postId}`)
@@ -165,5 +192,32 @@ export async function deleteOwnResource(resourceId: string) {
   })
 
   revalidatePath("/profile")
+  return { success: true }
+}
+
+export async function deleteOwnComment(commentId: string) {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: "Unauthorized" }
+  }
+
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: { authorId: true, postId: true }
+  })
+
+  if (!comment) {
+    return { error: "Not found" }
+  }
+
+  if (comment.authorId !== session.user.id && session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
+    return { error: "Unauthorized" }
+  }
+
+  await prisma.comment.delete({
+    where: { id: commentId }
+  })
+
+  revalidatePath(`/post/${comment.postId}`)
   return { success: true }
 }

@@ -67,6 +67,11 @@ export function Navbar() {
                   <Link href="/posts" className="px-2 py-1 text-lg font-medium hover:text-primary transition-colors">
                     Discussions
                   </Link>
+                  {session?.user && (
+                    <Link href="/dashboard" className="px-2 py-1 text-lg font-medium hover:text-primary transition-colors text-primary">
+                      Dashboard
+                    </Link>
+                  )}
                 </nav>
                 <div className="mt-auto border-t pt-4 flex flex-col gap-2">
                   {!session && (
@@ -95,6 +100,11 @@ export function Navbar() {
           <Link href="/posts" className="text-sm font-medium hover:text-primary transition-colors">
             Discussions
           </Link>
+          {session?.user && (
+            <Link href="/dashboard" className="text-sm font-medium hover:text-primary transition-colors text-primary">
+              Dashboard
+            </Link>
+          )}
         </nav>
         
         <form onSubmit={handleSearch} className="flex-1 max-w-sm mx-auto hidden lg:flex relative">
@@ -125,9 +135,13 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {session.user?.name?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt="Avatar" className="rounded-full object-cover" />
+                    ) : (
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                 </Button>} />
               <DropdownMenuContent align="end" className="w-56">
@@ -136,11 +150,14 @@ export function Navbar() {
                   <span className="text-xs text-muted-foreground">{session.user?.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href="/profile" className="w-full">Profile</Link>
+                  <Link href="/dashboard" className="w-full">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/profile" className="w-full">Settings</Link>
                 </DropdownMenuItem>
                 {session.user?.role === "ADMIN" || session.user?.role === "MODERATOR" ? (
                   <DropdownMenuItem>
-                    <Link href="/admin" className="w-full">Dashboard</Link>
+                    <Link href="/admin" className="w-full text-destructive font-medium">Admin Panel</Link>
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuItem onClick={() => signOut()}>

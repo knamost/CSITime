@@ -18,6 +18,7 @@ model User {
   currentElective String?
   currentSemester Int?
   username        String?    @unique
+  image           String?
   accounts        Account[]
   comments        Comment[]
   posts           Post[]
@@ -55,6 +56,7 @@ model Resource {
   subjectId    String
   downloads    Int          @default(0)
   createdAt    DateTime     @default(now())
+  isEdited     Boolean      @default(false)
   subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   uploadedBy   User         @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
 }
@@ -68,6 +70,8 @@ model Post {
   isLocked  Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  isEdited  Boolean   @default(false)
+  history   PostHistory[]
   comments  Comment[]
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
@@ -83,6 +87,9 @@ model Comment {
   parentId   String?
   isAccepted Boolean   @default(false)
   createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isEdited   Boolean   @default(false)
+  history    CommentHistory[]
   author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies    Comment[] @relation("CommentReplies")
@@ -149,4 +156,22 @@ model Bookmark {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+}
+
+
+model PostHistory {
+  id        String   @id @default(cuid())
+  postId    String
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model CommentHistory {
+  id        String   @id @default(cuid())
+  commentId String
+  content   String
+  createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
 }
