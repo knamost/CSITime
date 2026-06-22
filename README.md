@@ -102,7 +102,7 @@ Follow these instructions to get a local copy up and running.
     ```
 
 3.  **Set up the environment**
-    Create a `.env` file in the project root.
+    Rename `.env.example` to `.env` or create new `.env` in Project folder
     ```env
     # Example for the local Docker setup:
     DATABASE_URL="postgresql://docker:docker@localhost:5432/csitime"
