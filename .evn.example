@@ -1,0 +1,2 @@
+DATABASE_URL="postgresql://csitime_user:csitime_pass@localhost:5432/csitime"
+AUTH_SECRET="csitime-dev-secret-key-2024"
